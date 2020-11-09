@@ -1,5 +1,5 @@
 import React from 'react'
-import { Text, View, ScrollView, TextInput, Dimensions,  Keyboard, Animated, UIManager, TouchableOpacity, Alert} from 'react-native'
+import { Text, View, ScrollView, TextInput, Dimensions,  Keyboard, Animated, UIManager, TouchableOpacity, Alert, PermissionsAndroid, Platform} from 'react-native'
 import { Container, Content, Form, Item, Input, Label, Picker, DatePicker } from 'native-base'
 import Geolocation from '@react-native-community/geolocation';
 import {Icon, Button } from 'react-native-elements'
@@ -36,9 +36,46 @@ class PlaceOrder extends React.Component{
     
       _getLocationAsync = async () => {
         const {longitude, latitude} = this.state
-        Geolocation.getCurrentPosition(location => {
-           this.setState({ latitude: location.coords.latitude, longitude: location.coords.longitude, location: location.coords  })
-          })
+       
+       if (Platform.OS == "ios") {
+        await Geolocation.getCurrentPosition(
+          location => {
+            this.setState({ latitude: location.coords.latitude, longitude: location.coords.longitude, location: location.coords  })
+          },
+          error => {
+            console.log(error);
+          },
+      );
+       }else {
+        try {
+          const granted = await PermissionsAndroid.request(
+            PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+            {
+              title: "Cool Photo App Camera Permission",
+              message:
+                "Cool Photo App needs access to your camera " +
+                "so you can take awesome pictures.",
+              buttonNeutral: "Ask Me Later",
+              buttonNegative: "Cancel",
+              buttonPositive: "OK"
+            }
+          );
+          if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+            await Geolocation.getCurrentPosition(
+              location => {
+                this.setState({ latitude: location.coords.latitude, longitude: location.coords.longitude, location: location.coords  })
+              },
+              error => {
+                console.log(error);
+              },
+          );
+          } else {
+            console.log("Permission denied");
+          }
+        } catch (err) {
+          console.warn(err);
+        }
+       }
     
       };
     

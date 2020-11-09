@@ -1,4 +1,4 @@
-package com.fixit;
+package com.fixitway;
 
 import com.facebook.react.ReactActivity;
 import com.facebook.react.ReactActivityDelegate;

@@ -1,5 +1,5 @@
 import React from 'react'
-import { View, Text, Image, ScrollView, FlatList, TouchableOpacity, ImageBackground, Alert } from 'react-native'
+import { View, Text, Image, ScrollView, FlatList, TouchableOpacity, ImageBackground, Alert, RefreshControl } from 'react-native'
 
 import HomeBack from '../../assets/homeSlide.png'
 import Pluberimage from "../../assets/plumber.png"
@@ -12,54 +12,15 @@ import slideImage from "../../assets/homeSlide.png"
 import CarpenterImg from "../../assets/Carpenter.png"
 import homeButton from "../../assets/homeButton.png"
 import homeButton2 from "../../assets/homeButton2.png"
+import SkeletonPlaceholder from "react-native-skeleton-placeholder";
 
 class Dashboard extends React.Component {
     constructor(props) {
         super(props)
         this.state = {
+            loader: false,
+            scrollLoader: false,
             items: [
-                {
-                    image: Pluberimage,
-                    navigate: "Plum",
-                    name: "No Item Found",
-                    key: 1
-                },
-                {
-                    image: Electricimage,
-                    navigate: "Elec",
-                    name: "No Item Found",
-                    key: 2
-                },
-                {
-                    image: Fumiimage,
-                    navigate: "Fumi",
-                    name: "No Item Found",
-                    key: 3
-                },
-                {
-                    image: ITImg,
-                    navigate: "IT",
-                    name: "No Item Found",
-                    key: 4
-                },
-                {
-                    image: AcImg,
-                    navigate: "AC",
-                    name: "No Item Found",
-                    key: 5
-                },
-                {
-                    image: paintImg,
-                    navigate: "Painter",
-                    name: "No Item Found",
-                    key: 6
-                },
-                {
-                    image: CarpenterImg,
-                    navigate: "Car",
-                    name: "No Item Found",
-                    key: 7
-                },
 
             ],
 
@@ -101,23 +62,22 @@ class Dashboard extends React.Component {
 
 
     componentDidMount = () => {
-        
 
+        this.setState({loader: true})
         fetch('https://tabdeli.com/fixit/api/view_categories_api.php')
         .then(response => response.json())
         .then(data => {
-            console.log('data', data)
             if(data.status) {
                 this.setState({
                     items: data.categories
                 })
-            }else{
-                this.setState({
-                    items: this.state.items
-                })
             }
+        this.setState({loader: false})
         })
-        .catch(err => console.log('err', err))
+        .catch(err => {
+            this.setState({loader: false})
+            console.log('err', err)
+        })
         
         
         
@@ -125,6 +85,7 @@ class Dashboard extends React.Component {
 
 
     getsubCat = (id, name) => {
+        this.setState({scrollLoader: true})
 
         fetch(`https://tabdeli.com/fixit/api/view_sub_categories_api.php?cat_id=${id}`)
         .then(response => response.json())
@@ -134,7 +95,7 @@ class Dashboard extends React.Component {
                 //     items: data.categories
                 // })
                 console.log('data', data)
-
+                this.setState({scrollLoader: false})
                 this.props.navigation.navigate('Services', {
                     catData : data.categoryData,
                     serviceName: name
@@ -143,26 +104,41 @@ class Dashboard extends React.Component {
             else{
                 Alert.alert("Alert", data.message)
                 console.log('data', data)
+                this.setState({scrollLoader: false})
+
 
             }
         })
-        .catch(err => console.log('err', err))
+        .catch(err => {
+            console.log('err', err)
+            this.setState({scrollLoader: false})
+
+        })
 
     }
 
 
 
     render() {
-        console.log('this.state.items', this.state.items)
+        const { loader, scrollLoader } = this.state
         return (
             <View style={{ backgroundColor: '#000', width: '100%', height: '100%' }}>
-                <ScrollView>
+                <ScrollView refreshControl={
+                            <RefreshControl
+                            tintColor="#fff"
+                            titleColor="#fff"
+                            progressBackgroundColor="#fff"
+                            accessibilityIgnoresInvertColors={true}
+                            refreshing={scrollLoader } onRefresh={() => {
+                            }} />}> 
                     <View>
                         <Image source={HomeBack} style={{ width: '100%', height: 270 }} />
                     </View>
 
                     <View style={{ flex: 1, width: '100%', marginTop: -45 }}>
-                        <FlatList style={{ flex: 1, alignSelf: 'center' }}
+                     {!loader ?  
+                      <FlatList
+                        style={{ flex: 1, alignSelf: 'center' }}
                             data={this.state.items}
                             renderItem={({ item, index }) => {
                                 console.log('index', item.image_destination)
@@ -207,7 +183,27 @@ class Dashboard extends React.Component {
                             //Setting the number of column
                             numColumns={2}
                             keyExtractor={(item, index) => index}
-                        />
+                        /> 
+                        
+                        : 
+                        
+                        <FlatList style={{ flex: 1, alignSelf: 'center' }}
+                            data={[1,2,3,4,5,6]}
+                            numColumns={2}
+                            keyExtractor={(item, index) => index}
+                            renderItem={({ item, index }) => {
+                                return(
+                                    <SkeletonPlaceholder backgroundColor="grey" speed={1200}>
+                                        <TouchableOpacity style={{ width: 140, marginLeft: '10%', paddingVertical: 10 }}>
+                                             <View style={{ height: 135, width: 150,  right: 20, borderRadius: 10 }} />
+                                        </TouchableOpacity>
+                                    </SkeletonPlaceholder>
+                                )
+                            }}
+
+                            />
+                                
+                        }
                     </View>
 
                 </ScrollView>

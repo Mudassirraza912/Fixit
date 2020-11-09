@@ -1,4 +1,4 @@
-package com.fixit;
+package com.fixitway;
 
 import android.app.Application;
 import android.content.Context;
